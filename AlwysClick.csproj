@@ -44,6 +44,9 @@
   <PropertyGroup>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Arrow.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="ControlzEx, Version=3.0.2.4, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\PON\packages\ControlzEx.3.0.2.4\lib\net40\ControlzEx.dll</HintPath>
@@ -65,7 +68,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
@@ -86,6 +88,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Base\KeyModifiers.cs" />
     <Compile Include="DD\CDD.cs" />
     <Compile Include="DD\KeyToDDKey.cs" />
     <Compile Include="MainWindow.xaml.cs">
@@ -122,7 +125,19 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Resource\Arrow.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Press.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Arrow.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="bin\Debug\DD81200x64.32.dll" />
+    <Content Include="bin\Debug\DD81200x64.64.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

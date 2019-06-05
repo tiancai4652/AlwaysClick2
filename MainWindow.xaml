@@ -12,7 +12,7 @@
             <TextBlock Margin="35,0,0,0" Height="30" VerticalAlignment="Center"> 开始\停止键</TextBlock>
             <TextBox Name="box" Height="30" Width="250" VerticalAlignment="Center" Margin="20" KeyUp="TextBox_KeyUp"></TextBox>
             <Button Width="100" Height="30" Margin="10" Click="Button_Click">启用/停止</Button>
-            <CheckBox IsChecked="{Binding IsChooseDD}">启动DD键</CheckBox>
+            <CheckBox IsChecked="{Binding IsChooseDD}" IsEnabled="{Binding IsChooseDDEnabled}">启动DD键</CheckBox>
         </StackPanel>
         
     </Grid>

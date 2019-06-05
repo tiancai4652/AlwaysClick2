@@ -1,6 +1,7 @@
 ﻿using MahApps.Metro.Controls;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -23,30 +24,39 @@ namespace AlwysClick
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow : MetroWindow
+    public partial class MainWindow : MetroWindow, INotifyPropertyChanged
     {
-        private static CDD dd ;
+        #region Field&&Property
+        static CDD dd = new CDD();
+        bool IsGo = false;
 
-        public bool IsChooseDD { get; set; }
-
-        public MainWindow()
+        bool _IsChooseDD = true;
+        public bool IsChooseDD
         {
-            dd = new CDD();
-            IsChooseDD = true;
-            InitializeComponent();
-            IsGo = false;
-            Thread a = new Thread(RunAlwaysClick);
-            a.IsBackground = true;
-            
-            this.DataContext=this;
-            string path = System.Windows.Forms.Application.StartupPath + "\\DD81200x64.64.dll";
-            if (!LoadDllFile(path))
+            get
             {
-                return;
+                return _IsChooseDD;
             }
-            a.Start();
+            set
+            {
+                _IsChooseDD = value;
+                OnPropertyChanged(nameof(IsChooseDD));
+            }
         }
-        public bool IsGo { get; set; }
+
+        bool _IsChooseDDEnabled = true;
+        public bool IsChooseDDEnabled
+        {
+            get
+            {
+                return _IsChooseDDEnabled;
+            }
+            set
+            {
+                _IsChooseDDEnabled = value;
+                OnPropertyChanged(nameof(IsChooseDDEnabled));
+            }
+        }
 
         private static Dictionary<string, Keys> _DicKeyStr;
         public static Dictionary<string, Keys> DicKeyStr
@@ -74,132 +84,24 @@ namespace AlwysClick
         }
         public Keys Key { get; set; }
         public Keys OldKey { get; set; }
-        private void TextBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            box.Text = e.Key.ToString();
-            
-        }
-
-
-        private static bool LoadDllFile(string dllfile)
-        {
-
-            System.IO.FileInfo fi = new System.IO.FileInfo(dllfile);
-            if (!fi.Exists)
-            {
-                System.Windows.Forms.MessageBox.Show("文件不存在");
-                return false;
-            }
-            int ret = dd.Load(dllfile);
-            if (ret == -2) { System.Windows.Forms.MessageBox.Show("装载库时发生错误"); return false; }
-            if (ret == -1) { System.Windows.Forms.MessageBox.Show("取函数地址时发生错误"); return false; }
-            if (ret == 0) { /*System.Windows.Forms.MessageBox.Show("非增强模块"); */}
-
-            return true;
-        }
-
-
-        [System.Runtime.InteropServices.DllImport("user32")]
-        private static extern int mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
-        const int MOUSEEVENTF_LEFTDOWN = 0x0002; //模拟鼠标左键按下
-        const int MOUSEEVENTF_LEFTUP = 0x0004; //模拟鼠标左键抬起
-        public void RunAlwaysClick()
-        {
-            while (true)
-            {
-                if (IsGo)
-                {
-                    if (IsChooseDD)
-                    {
-                        //int ddcode = 300;                 
-                        dd.btn(1);
-                        Thread.Sleep(100);
-                        dd.btn(2);
-                        Thread.Sleep(200);
-                    }
-                    else
-                    {
-                        mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);//鼠标down事件  
-                        Thread.Sleep(100);
-                        mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);//鼠标up事件  
-                        Thread.Sleep(200);
-                    }
-
-                }
-            }
-        }
-
-        public IntPtr Handle { get; set; }
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-            HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
-            source.AddHook(WndProc);
-        }
-
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            if (msg == 0x0312)
-            {
-                int PressKeyValue = wParam.ToInt32();
-                if (PressKeyValue == (int)Key)
-                {
-                    IsGo = !IsGo;
-                }
-                
-            }
-
-            return Handle;
-        }
-
-    
-
-        #region
-        [DllImport("user32.dll")]
-        public static extern int MapVirtualKey(uint Ucode, uint uMapType);
-        public void Press(Keys key, int delay)
-        {
-            keybd_event((byte)key, (byte)(MapVirtualKey((uint)key, 0)), 0, 0);
-            Thread.Sleep(delay);
-            keybd_event((byte)key, (byte)(MapVirtualKey((uint)key, 0)), 2, 0);
-        }
-
-
         List<Keys> RegistorList = new List<Keys>();
-        public void Register(IntPtr hWnd, int id, KeyModifiers fsModifiers, Keys vk)
-        {
-            if (!RegistorList.Exists(t => (int)t == ((int)vk)))
-            {
-                RegistorList.Add(vk);
-            }
-            RegisterHotKey(hWnd, id, fsModifiers, vk);
-        }
-        public void Unregister(IntPtr hWnd, int id)
-        {
-            if (!RegistorList.Exists(t => (int)t == (id)))
-            {
-                RegistorList.Remove((Keys)id);
-            }
-            UnregisterHotKey(hWnd, id);
-        }
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool RegisterHotKey(IntPtr hWnd, int id, KeyModifiers fsModifiers, Keys vk);
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-        [Flags()]
-        public enum KeyModifiers
-        {
-            None = 0,
-            Alt = 1,
-            Ctrl = 2,
-            Shift = 4,
-            WindowsKey = 8
-        }
-        [DllImport("user32.dll", EntryPoint = "keybd_event")]
-        public static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
-
-
         #endregion
+
+        public MainWindow()
+        {
+            InitializeComponent();
+            this.DataContext = this;
+            string path = System.Windows.Forms.Application.StartupPath + "\\DD81200x64.64.dll";
+            if (!LoadDllFile(path))
+            {
+                IsChooseDDEnabled = false;
+            }
+            Thread a = new Thread(RunAlwaysClick);
+            a.IsBackground = true;
+            a.Start();
+        }
+
+        #region Event
 
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -238,5 +140,125 @@ namespace AlwysClick
                 }
             }
         }
+
+        private void TextBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            box.Text = e.Key.ToString();
+        }
+        #endregion
+
+        #region Private
+
+        void RunAlwaysClick()
+        {
+            while (true)
+            {
+                if (IsGo)
+                {
+                    if (IsChooseDD)
+                    {
+                        //int ddcode = 300;                 
+                        dd.btn(1);
+                        Thread.Sleep(100);
+                        dd.btn(2);
+                        Thread.Sleep(200);
+                    }
+                    else
+                    {
+                        mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);//鼠标down事件  
+                        Thread.Sleep(100);
+                        mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);//鼠标up事件  
+                        Thread.Sleep(200);
+                    }
+
+                }
+                Thread.Sleep(200);
+            }
+        }
+
+        static bool LoadDllFile(string dllfile)
+        {
+
+            System.IO.FileInfo fi = new System.IO.FileInfo(dllfile);
+            if (!fi.Exists)
+            {
+                System.Windows.Forms.MessageBox.Show("文件不存在");
+                return false;
+            }
+            int ret = dd.Load(dllfile);
+            if (ret == -2) { System.Windows.Forms.MessageBox.Show("装载库时发生错误"); return false; }
+            if (ret == -1) { System.Windows.Forms.MessageBox.Show("取函数地址时发生错误"); return false; }
+            if (ret == 0) { /*System.Windows.Forms.MessageBox.Show("非增强模块"); */}
+
+            return true;
+        }
+
+        public void Register(IntPtr hWnd, int id, KeyModifiers fsModifiers, Keys vk)
+        {
+            if (!RegistorList.Exists(t => (int)t == ((int)vk)))
+            {
+                RegistorList.Add(vk);
+            }
+            RegisterHotKey(hWnd, id, fsModifiers, vk);
+        }
+        public void Unregister(IntPtr hWnd, int id)
+        {
+            if (!RegistorList.Exists(t => (int)t == (id)))
+            {
+                RegistorList.Remove((Keys)id);
+            }
+            UnregisterHotKey(hWnd, id);
+        }
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool RegisterHotKey(IntPtr hWnd, int id, KeyModifiers fsModifiers, Keys vk);
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+        [DllImport("user32.dll", EntryPoint = "keybd_event")]
+        public static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
+        [System.Runtime.InteropServices.DllImport("user32")]
+        private static extern int mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
+        const int MOUSEEVENTF_LEFTDOWN = 0x0002; //模拟鼠标左键按下
+        const int MOUSEEVENTF_LEFTUP = 0x0004; //模拟鼠标左键抬起
+        [DllImport("user32.dll")]
+        public static extern int MapVirtualKey(uint Ucode, uint uMapType);
+        public void Press(Keys key, int delay)
+        {
+            keybd_event((byte)key, (byte)(MapVirtualKey((uint)key, 0)), 0, 0);
+            Thread.Sleep(delay);
+            keybd_event((byte)key, (byte)(MapVirtualKey((uint)key, 0)), 2, 0);
+        }
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
+            source.AddHook(WndProc);
+        }
+        public IntPtr Handle { get; set; }
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == 0x0312)
+            {
+                int PressKeyValue = wParam.ToInt32();
+                if (PressKeyValue == (int)Key)
+                {
+                    IsGo = !IsGo;
+                }
+            }
+            return Handle;
+        }
+        #endregion
+
+        #region IPropertyChanged
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged(string _property)
+        {
+            PropertyChangedEventHandler eventhandler = this.PropertyChanged;
+            if (null == eventhandler)
+                return;
+            eventhandler(this, new PropertyChangedEventArgs(_property));
+        }
+        #endregion
+
     }
 }
